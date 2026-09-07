@@ -8,6 +8,7 @@ import {
   type ArcgisView,
   type TraceFn,
 } from "@orange-groove/react-map-annotate/arcgis";
+import { loadViewExtent } from "./osmTrace";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 
 export default function ArcgisCanvas({
@@ -50,8 +51,7 @@ export default function ArcgisCanvas({
       popupEnabled: false,
       ui: { components: [] },
     });
-    const handle = next.watch("stationary", (stationary) => {
-      if (!stationary) return;
+    const publish = () => {
       const center = next.center;
       if (center.longitude == null || center.latitude == null) return;
       onViewChange({
@@ -59,9 +59,15 @@ export default function ArcgisCanvas({
         latitude: center.latitude,
         zoom: next.zoom,
       });
+      void loadViewExtent(next.extent);
+    };
+    const handle = next.watch("stationary", (stationary) => {
+      if (!stationary) return;
+      publish();
     });
     void next.when().then(() => {
       setView(next as unknown as ArcgisView);
+      publish();
     });
 
     return () => {
