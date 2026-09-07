@@ -9,7 +9,6 @@ import {
   AnnotateList,
   AnnotateProvider,
   AnnotateToolbar,
-  useAnnotateTools,
   type Annotation,
 } from "@orange-groove/react-map-annotate/mapbox";
 import { Annotate as MapLibreAnnotate } from "@orange-groove/react-map-annotate/maplibre";
@@ -20,7 +19,6 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "leaflet/dist/leaflet.css";
 import "@orange-groove/react-map-annotate/styles.css";
-import { CustomList } from "./CustomList";
 
 const ArcgisCanvas = lazy(() => import("./ArcgisCanvas"));
 
@@ -75,10 +73,8 @@ export default function App() {
         )}
         <div className="toolbar">
           <AnnotateToolbar />
-          <TextToolbar />
         </div>
         <div className="lists">
-          <CustomList />
           <div className="list">
             <AnnotateList />
           </div>
@@ -180,48 +176,6 @@ function LeafletCanvas() {
         />
         <LeafletAnnotate />
       </MapContainer>
-    </div>
-  );
-}
-
-function TextToolbar() {
-  const {
-    items,
-    finish,
-    canFinish,
-    selectedId,
-    deleteSelected,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-  } = useAnnotateTools();
-
-  return (
-    <div className="text-toolbar" role="toolbar" aria-label="Text annotation tools">
-      {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          className={item.active ? "is-active" : undefined}
-          aria-pressed={item.active}
-          onClick={item.select}
-        >
-          {item.label}
-        </button>
-      ))}
-      <button type="button" disabled={!canFinish} onClick={finish}>
-        Finish
-      </button>
-      <button type="button" disabled={!canUndo} onClick={undo}>
-        Undo
-      </button>
-      <button type="button" disabled={!canRedo} onClick={redo}>
-        Redo
-      </button>
-      <button type="button" disabled={!selectedId} onClick={deleteSelected}>
-        Delete
-      </button>
     </div>
   );
 }
