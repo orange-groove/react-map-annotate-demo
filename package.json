@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "start": "vite preview --host 0.0.0.0 --port $PORT",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
     "@arcgis/core": "^4.32.10",
-    "@orange-groove/react-map-annotate": "file:../react-map-annotate",
+    "@orange-groove/react-map-annotate": "^0.3.0",
     "@vis.gl/react-google-maps": "^1.10.0",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.29.0",
