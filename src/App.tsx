@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { JsonTree } from "./JsonTree";
 import { APIProvider, Map as GoogleMap } from "@vis.gl/react-google-maps";
 import MapboxMap, { NavigationControl as MapboxNav } from "react-map-gl/mapbox";
@@ -15,7 +15,7 @@ import {
 import { Annotate as MapLibreAnnotate } from "@orange-groove/react-map-annotate/maplibre";
 import { Annotate as GoogleAnnotate } from "@orange-groove/react-map-annotate/google";
 import { Annotate as LeafletAnnotate } from "@orange-groove/react-map-annotate/leaflet";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "leaflet/dist/leaflet.css";
@@ -30,6 +30,18 @@ const MAPLIBRE_STYLE =
 
 type Engine = "mapbox" | "maplibre" | "google" | "leaflet" | "arcgis";
 
+type MapView = {
+  longitude: number;
+  latitude: number;
+  zoom: number;
+};
+
+const DEFAULT_VIEW: MapView = {
+  longitude: -73.9857,
+  latitude: 40.7484,
+  zoom: 16,
+};
+
 const ENGINES: { id: Engine; label: string }[] = [
   { id: "mapbox", label: "Mapbox" },
   { id: "maplibre", label: "MapLibre" },
@@ -42,9 +54,26 @@ export default function App() {
   const [engine, setEngine] = useState<Engine>("mapbox");
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [stateOpen, setStateOpen] = useState(false);
+  const [showLabels, setShowLabels] = useState(true);
+  const [showArea, setShowArea] = useState(true);
+  const [view, setView] = useState<MapView>(DEFAULT_VIEW);
+  const onViewChange = useCallback((next: MapView) => {
+    setView((current) =>
+      current.longitude === next.longitude &&
+      current.latitude === next.latitude &&
+      current.zoom === next.zoom
+        ? current
+        : next,
+    );
+  }, []);
 
   return (
-    <AnnotateProvider annotations={annotations} onChange={setAnnotations}>
+    <AnnotateProvider
+      annotations={annotations}
+      onChange={setAnnotations}
+      showLabels={showLabels}
+      showArea={showArea}
+    >
       <div className="app">
         <div
           className={stateOpen ? "state-dock is-open" : "state-dock"}
@@ -63,9 +92,27 @@ export default function App() {
             className="state-flyout"
             aria-label="Annotation state"
           >
-            <div className="state-flyout-heading">annotations</div>
+            <div className="state-flyout-heading">state</div>
+            <div className="state-flyout-toggles">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={showLabels}
+                  onChange={(event) => setShowLabels(event.target.checked)}
+                />
+                Labels
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={showArea}
+                  onChange={(event) => setShowArea(event.target.checked)}
+                />
+                Area
+              </label>
+            </div>
             <div className="state-flyout-json">
-              <JsonTree value={annotations} />
+              <JsonTree value={{ view, annotations }} />
             </div>
           </aside>
         </div>
@@ -84,16 +131,16 @@ export default function App() {
           ))}
         </div>
         {engine === "mapbox" ? (
-          <MapboxCanvas />
+          <MapboxCanvas view={view} onViewChange={onViewChange} />
         ) : engine === "maplibre" ? (
-          <MapLibreCanvas />
+          <MapLibreCanvas view={view} onViewChange={onViewChange} />
         ) : engine === "google" ? (
-          <GoogleCanvas />
+          <GoogleCanvas view={view} onViewChange={onViewChange} />
         ) : engine === "leaflet" ? (
-          <LeafletCanvas />
+          <LeafletCanvas view={view} onViewChange={onViewChange} />
         ) : (
           <Suspense fallback={null}>
-            <ArcgisCanvas />
+            <ArcgisCanvas view={view} onViewChange={onViewChange} />
           </Suspense>
         )}
         <div className="toolbar">
@@ -109,7 +156,13 @@ export default function App() {
   );
 }
 
-function MapboxCanvas() {
+function MapboxCanvas({
+  view,
+  onViewChange,
+}: {
+  view: MapView;
+  onViewChange: (view: MapView) => void;
+}) {
   if (!TOKEN) {
     return (
       <div className="missing-token">
@@ -124,11 +177,14 @@ function MapboxCanvas() {
   return (
     <MapboxMap
       mapboxAccessToken={TOKEN}
-      initialViewState={{
-        longitude: -73.9857,
-        latitude: 40.7484,
-        zoom: 14,
-      }}
+      initialViewState={view}
+      onMove={(event) =>
+        onViewChange({
+          longitude: event.viewState.longitude,
+          latitude: event.viewState.latitude,
+          zoom: event.viewState.zoom,
+        })
+      }
       mapStyle="mapbox://styles/mapbox/streets-v12"
       attributionControl={false}
       style={{ width: "100%", height: "100%" }}
@@ -139,14 +195,23 @@ function MapboxCanvas() {
   );
 }
 
-function MapLibreCanvas() {
+function MapLibreCanvas({
+  view,
+  onViewChange,
+}: {
+  view: MapView;
+  onViewChange: (view: MapView) => void;
+}) {
   return (
     <MapLibreMap
-      initialViewState={{
-        longitude: -73.9857,
-        latitude: 40.7484,
-        zoom: 14,
-      }}
+      initialViewState={view}
+      onMove={(event) =>
+        onViewChange({
+          longitude: event.viewState.longitude,
+          latitude: event.viewState.latitude,
+          zoom: event.viewState.zoom,
+        })
+      }
       mapStyle={MAPLIBRE_STYLE}
       attributionControl={false}
       style={{ width: "100%", height: "100%" }}
@@ -157,7 +222,13 @@ function MapLibreCanvas() {
   );
 }
 
-function GoogleCanvas() {
+function GoogleCanvas({
+  view,
+  onViewChange,
+}: {
+  view: MapView;
+  onViewChange: (view: MapView) => void;
+}) {
   if (!GOOGLE_KEY) {
     return (
       <div className="missing-token">
@@ -172,8 +243,15 @@ function GoogleCanvas() {
   return (
     <APIProvider apiKey={GOOGLE_KEY}>
       <GoogleMap
-        defaultCenter={{ lat: 40.7484, lng: -73.9857 }}
-        defaultZoom={14}
+        defaultCenter={{ lat: view.latitude, lng: view.longitude }}
+        defaultZoom={view.zoom}
+        onCameraChanged={(event) =>
+          onViewChange({
+            longitude: event.detail.center.lng,
+            latitude: event.detail.center.lat,
+            zoom: event.detail.zoom,
+          })
+        }
         mapId="DEMO_MAP_ID"
         gestureHandling="greedy"
         disableDefaultUI
@@ -186,12 +264,18 @@ function GoogleCanvas() {
   );
 }
 
-function LeafletCanvas() {
+function LeafletCanvas({
+  view,
+  onViewChange,
+}: {
+  view: MapView;
+  onViewChange: (view: MapView) => void;
+}) {
   return (
     <div className="map-canvas">
       <MapContainer
-        center={[40.7484, -73.9857]}
-        zoom={14}
+        center={[view.latitude, view.longitude]}
+        zoom={view.zoom}
         zoomControl={false}
         style={{ width: "100%", height: "100%" }}
       >
@@ -199,8 +283,34 @@ function LeafletCanvas() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <LeafletViewSync onViewChange={onViewChange} />
         <LeafletAnnotate />
       </MapContainer>
     </div>
   );
+}
+
+function LeafletViewSync({
+  onViewChange,
+}: {
+  onViewChange: (view: MapView) => void;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    const sync = () => {
+      const center = map.getCenter();
+      onViewChange({
+        longitude: center.lng,
+        latitude: center.lat,
+        zoom: map.getZoom(),
+      });
+    };
+    map.on("move", sync);
+    map.on("moveend", sync);
+    return () => {
+      map.off("move", sync);
+      map.off("moveend", sync);
+    };
+  }, [map, onViewChange]);
+  return null;
 }

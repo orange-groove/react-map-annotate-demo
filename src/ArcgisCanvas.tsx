@@ -9,13 +9,25 @@ import {
 } from "@orange-groove/react-map-annotate/arcgis";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 
-export default function ArcgisCanvas() {
+export default function ArcgisCanvas({
+  view: camera,
+  onViewChange,
+}: {
+  view: { longitude: number; latitude: number; zoom: number };
+  onViewChange: (view: {
+    longitude: number;
+    latitude: number;
+    zoom: number;
+  }) => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const initialCamera = useRef(camera);
   const [view, setView] = useState<ArcgisView | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    const { longitude, latitude, zoom } = initialCamera.current;
 
     const map = new Map({
       layers: [
@@ -30,19 +42,30 @@ export default function ArcgisCanvas() {
     const next = new MapView({
       container,
       map,
-      center: [-73.9857, 40.7484],
-      zoom: 14,
+      center: [longitude, latitude],
+      zoom,
       popupEnabled: false,
       ui: { components: [] },
+    });
+    const handle = next.watch("stationary", (stationary) => {
+      if (!stationary) return;
+      const center = next.center;
+      if (center.longitude == null || center.latitude == null) return;
+      onViewChange({
+        longitude: center.longitude,
+        latitude: center.latitude,
+        zoom: next.zoom,
+      });
     });
     void next.when().then(() => {
       setView(next as unknown as ArcgisView);
     });
 
     return () => {
+      handle.remove();
       next.destroy();
     };
-  }, []);
+  }, [onViewChange]);
 
   return (
     <div className="map-canvas">

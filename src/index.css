@@ -143,6 +143,26 @@ body {
   color: #7dd3fc;
 }
 
+.state-flyout-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0 0 10px;
+  font: 600 11px/1.3 system-ui, sans-serif;
+  color: #cbd5e1;
+}
+
+.state-flyout-toggles label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.state-flyout-toggles input {
+  margin: 0;
+}
+
 .state-flyout-json {
   flex: 1;
   margin: 0;
