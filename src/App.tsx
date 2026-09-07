@@ -40,10 +40,34 @@ const ENGINES: { id: Engine; label: string }[] = [
 export default function App() {
   const [engine, setEngine] = useState<Engine>("mapbox");
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [stateOpen, setStateOpen] = useState(false);
 
   return (
     <AnnotateProvider annotations={annotations} onChange={setAnnotations}>
       <div className="app">
+        <div
+          className={stateOpen ? "state-dock is-open" : "state-dock"}
+        >
+          <button
+            type="button"
+            className="state-toggle"
+            aria-expanded={stateOpen}
+            aria-controls="annotation-state"
+            onClick={() => setStateOpen((open) => !open)}
+          >
+            State
+          </button>
+          <aside
+            id="annotation-state"
+            className="state-flyout"
+            aria-label="Annotation state"
+          >
+            <div className="state-flyout-heading">annotations</div>
+            <pre className="state-flyout-json">
+              {JSON.stringify(annotations, null, 2)}
+            </pre>
+          </aside>
+        </div>
         <div className="engine-switch" role="tablist" aria-label="Map engine">
           {ENGINES.map((item) => (
             <button
