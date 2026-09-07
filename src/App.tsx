@@ -1,5 +1,6 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { JsonTree } from "./JsonTree";
+import { useOsmTrace } from "./osmTrace";
 import { APIProvider, Map as GoogleMap } from "@vis.gl/react-google-maps";
 import MapboxMap, { NavigationControl as MapboxNav } from "react-map-gl/mapbox";
 import MapLibreMap, {
@@ -11,6 +12,7 @@ import {
   AnnotateProvider,
   AnnotateToolbar,
   type Annotation,
+  type TraceFn,
 } from "@orange-groove/react-map-annotate/mapbox";
 import { Annotate as MapLibreAnnotate } from "@orange-groove/react-map-annotate/maplibre";
 import { Annotate as GoogleAnnotate } from "@orange-groove/react-map-annotate/google";
@@ -57,6 +59,10 @@ export default function App() {
   const [showLabels, setShowLabels] = useState(true);
   const [showArea, setShowArea] = useState(true);
   const [view, setView] = useState<MapView>(DEFAULT_VIEW);
+  const osmTrace = useOsmTrace(
+    view,
+    engine === "google" || engine === "leaflet" || engine === "arcgis",
+  );
   const onViewChange = useCallback((next: MapView) => {
     setView((current) =>
       current.longitude === next.longitude &&
@@ -135,12 +141,24 @@ export default function App() {
         ) : engine === "maplibre" ? (
           <MapLibreCanvas view={view} onViewChange={onViewChange} />
         ) : engine === "google" ? (
-          <GoogleCanvas view={view} onViewChange={onViewChange} />
+          <GoogleCanvas
+            view={view}
+            onViewChange={onViewChange}
+            osmTrace={osmTrace}
+          />
         ) : engine === "leaflet" ? (
-          <LeafletCanvas view={view} onViewChange={onViewChange} />
+          <LeafletCanvas
+            view={view}
+            onViewChange={onViewChange}
+            osmTrace={osmTrace}
+          />
         ) : (
           <Suspense fallback={null}>
-            <ArcgisCanvas view={view} onViewChange={onViewChange} />
+            <ArcgisCanvas
+              view={view}
+              onViewChange={onViewChange}
+              trace={osmTrace}
+            />
           </Suspense>
         )}
         <div className="toolbar">
@@ -225,10 +243,13 @@ function MapLibreCanvas({
 function GoogleCanvas({
   view,
   onViewChange,
+  osmTrace,
 }: {
   view: MapView;
   onViewChange: (view: MapView) => void;
+  osmTrace: TraceFn;
 }) {
+  const publishedView = useRef(view);
   if (!GOOGLE_KEY) {
     return (
       <div className="missing-token">
@@ -245,20 +266,30 @@ function GoogleCanvas({
       <GoogleMap
         defaultCenter={{ lat: view.latitude, lng: view.longitude }}
         defaultZoom={view.zoom}
-        onCameraChanged={(event) =>
-          onViewChange({
+        onCameraChanged={(event) => {
+          const next = {
             longitude: event.detail.center.lng,
             latitude: event.detail.center.lat,
             zoom: event.detail.zoom,
-          })
-        }
+          };
+          const prev = publishedView.current;
+          if (
+            Math.abs(prev.latitude - next.latitude) < 0.0002 &&
+            Math.abs(prev.longitude - next.longitude) < 0.0002 &&
+            Math.abs(prev.zoom - next.zoom) < 0.15
+          ) {
+            return;
+          }
+          publishedView.current = next;
+          onViewChange(next);
+        }}
         mapId="DEMO_MAP_ID"
         gestureHandling="greedy"
         disableDefaultUI
         clickableIcons={false}
         style={{ width: "100%", height: "100%" }}
       >
-        <GoogleAnnotate />
+        <GoogleAnnotate trace={osmTrace} />
       </GoogleMap>
     </APIProvider>
   );
@@ -267,9 +298,11 @@ function GoogleCanvas({
 function LeafletCanvas({
   view,
   onViewChange,
+  osmTrace,
 }: {
   view: MapView;
   onViewChange: (view: MapView) => void;
+  osmTrace: TraceFn;
 }) {
   return (
     <div className="map-canvas">
@@ -284,7 +317,7 @@ function LeafletCanvas({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <LeafletViewSync onViewChange={onViewChange} />
-        <LeafletAnnotate />
+        <LeafletAnnotate trace={osmTrace} />
       </MapContainer>
     </div>
   );

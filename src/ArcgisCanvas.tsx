@@ -6,12 +6,14 @@ import {
   Annotate as ArcgisAnnotate,
   ArcgisViewProvider,
   type ArcgisView,
+  type TraceFn,
 } from "@orange-groove/react-map-annotate/arcgis";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 
 export default function ArcgisCanvas({
   view: camera,
   onViewChange,
+  trace,
 }: {
   view: { longitude: number; latitude: number; zoom: number };
   onViewChange: (view: {
@@ -19,6 +21,7 @@ export default function ArcgisCanvas({
     latitude: number;
     zoom: number;
   }) => void;
+  trace?: TraceFn;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const initialCamera = useRef(camera);
@@ -71,7 +74,7 @@ export default function ArcgisCanvas({
     <div className="map-canvas">
       <div ref={containerRef} className="arcgis-view" />
       <ArcgisViewProvider view={view}>
-        <ArcgisAnnotate />
+        <ArcgisAnnotate trace={trace} />
       </ArcgisViewProvider>
     </div>
   );
