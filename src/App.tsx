@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from "react";
+import { JsonTree } from "./JsonTree";
 import { APIProvider, Map as GoogleMap } from "@vis.gl/react-google-maps";
 import MapboxMap, { NavigationControl as MapboxNav } from "react-map-gl/mapbox";
 import MapLibreMap, {
@@ -63,9 +64,9 @@ export default function App() {
             aria-label="Annotation state"
           >
             <div className="state-flyout-heading">annotations</div>
-            <pre className="state-flyout-json">
-              {JSON.stringify(annotations, null, 2)}
-            </pre>
+            <div className="state-flyout-json">
+              <JsonTree value={annotations} />
+            </div>
           </aside>
         </div>
         <div className="engine-switch" role="tablist" aria-label="Map engine">
