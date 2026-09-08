@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@arcgis/core": "^4.32.10",
-    "@orange-groove/react-map-annotate": "^0.3.7",
+    "@orange-groove/react-map-annotate": "^0.3.8",
     "@vis.gl/react-google-maps": "^1.10.0",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.29.0",
