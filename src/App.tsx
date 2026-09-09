@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { JsonTree } from "./JsonTree";
+import { SiteLinks } from "./SiteLinks";
 import {
   GoogleOsmPrefetch,
   LeafletOsmPrefetch,
@@ -175,6 +176,7 @@ export default function App() {
             <AnnotateList />
           </div>
         </div>
+        <SiteLinks />
       </div>
     </AnnotateProvider>
   );

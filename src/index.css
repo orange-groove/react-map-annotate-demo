@@ -251,6 +251,47 @@ body {
   color: #c4b5fd;
 }
 
+.site-links {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  transform: translateX(-50%);
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35);
+}
+
+.site-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  color: #e2e8f0;
+}
+
+.site-link:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.site-link svg {
+  width: 17px;
+  height: 17px;
+}
+
+.site-link-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
 .missing-token {
   display: grid;
   place-items: center;
