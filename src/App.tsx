@@ -17,6 +17,7 @@ import {
   AnnotateProvider,
   AnnotateToolbar,
   type Annotation,
+  type DrawMode,
   type TraceFn,
 } from "@orange-groove/react-map-annotate/mapbox";
 import { Annotate as MapLibreAnnotate } from "@orange-groove/react-map-annotate/maplibre";
@@ -63,6 +64,7 @@ export default function App() {
   const [stateOpen, setStateOpen] = useState(false);
   const [showLabels, setShowLabels] = useState(true);
   const [showArea, setShowArea] = useState(true);
+  const [drawMode, setDrawMode] = useState<DrawMode>("click");
   const [view, setView] = useState<MapView>(DEFAULT_VIEW);
   // Google / Leaflet / ArcGIS have no vector query. Mapbox and MapLibre
   // keep the library's built-in Trace — do not put this on AnnotateProvider.
@@ -86,6 +88,7 @@ export default function App() {
       onChange={setAnnotations}
       showLabels={showLabels}
       showArea={showArea}
+      drawMode={drawMode}
     >
       <div className="app">
         <div
@@ -123,7 +126,24 @@ export default function App() {
                 />
                 Area
               </label>
+              <label className="state-switch">
+                <input
+                  type="checkbox"
+                  role="switch"
+                  checked={drawMode === "drag"}
+                  onChange={(event) =>
+                    setDrawMode(event.target.checked ? "drag" : "click")
+                  }
+                />
+                <span className="state-switch-track" aria-hidden />
+                drawMode: <code>{drawMode}</code>
+              </label>
             </div>
+            <p className="state-flyout-hint">
+              {drawMode === "click"
+                ? "Circle, rectangle, line, arrow, and measure take two clicks."
+                : "Circle, rectangle, line, arrow, and measure take one press-drag-release."}
+            </p>
             <div className="state-flyout-json">
               <JsonTree value={{ view, annotations }} />
             </div>
