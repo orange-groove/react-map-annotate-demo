@@ -22,6 +22,10 @@ export default defineConfig({
             annotateRoot,
             "src/arcgis.ts",
           ),
+          "@orange-groove/react-map-annotate/osm": path.join(
+            annotateRoot,
+            "src/osm.ts",
+          ),
           "@orange-groove/react-map-annotate/leaflet": path.join(
             annotateRoot,
             "src/leaflet.ts",

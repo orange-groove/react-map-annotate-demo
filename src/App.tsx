@@ -1,11 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { JsonTree } from "./JsonTree";
 import { SiteLinks } from "./SiteLinks";
-import {
-  GoogleOsmPrefetch,
-  LeafletOsmPrefetch,
-  useOsmTrace,
-} from "./osmTrace";
+import { osmTrace } from "./osmTrace";
 import { APIProvider, Map as GoogleMap } from "@vis.gl/react-google-maps";
 import MapboxMap, { NavigationControl as MapboxNav } from "react-map-gl/mapbox";
 import MapLibreMap, {
@@ -69,12 +65,6 @@ export default function App() {
   const [showArea, setShowArea] = useState(true);
   const [drawMode, setDrawMode] = useState<DrawMode>("click");
   const [view, setView] = useState<MapView>(DEFAULT_VIEW);
-  // Google / Leaflet / ArcGIS have no vector query. Mapbox and MapLibre
-  // keep the library's built-in Trace — do not put this on AnnotateProvider.
-  const osmTrace = useOsmTrace(
-    view,
-    engine === "google" || engine === "leaflet" || engine === "arcgis",
-  );
   const onViewChange = useCallback((next: MapView) => {
     setView((current) =>
       current.longitude === next.longitude &&
@@ -321,7 +311,6 @@ function GoogleCanvas({
         clickableIcons={false}
         style={{ width: "100%", height: "100%" }}
       >
-        <GoogleOsmPrefetch />
         <GoogleAnnotate trace={osmTrace} />
       </GoogleMap>
     </APIProvider>
@@ -350,7 +339,6 @@ function LeafletCanvas({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <LeafletViewSync onViewChange={onViewChange} />
-        <LeafletOsmPrefetch />
         <LeafletAnnotate trace={osmTrace} />
       </MapContainer>
     </div>
