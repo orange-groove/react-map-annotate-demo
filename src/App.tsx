@@ -24,6 +24,9 @@ import { Annotate as MapLibreAnnotate } from "@orange-groove/react-map-annotate/
 import { Annotate as GoogleAnnotate } from "@orange-groove/react-map-annotate/google";
 import { Annotate as LeafletAnnotate } from "@orange-groove/react-map-annotate/leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
+// maplibre-gl resolves its worker from import.meta.url, which points at the
+// hashed chunk once bundled. Ship the worker ourselves so the lookup resolves.
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "leaflet/dist/leaflet.css";
@@ -259,6 +262,7 @@ function MapLibreCanvas({
         })
       }
       mapStyle={MAPLIBRE_STYLE}
+      workerUrl={maplibreWorkerUrl}
       attributionControl={false}
       style={{ width: "100%", height: "100%" }}
     >

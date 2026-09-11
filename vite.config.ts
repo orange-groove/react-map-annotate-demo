@@ -58,6 +58,11 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["@arcgis/core", "@orange-groove/react-map-annotate"],
   },
+  // maplibre-gl constructs its worker with { type: "module" }, so the emitted
+  // worker chunk has to be ESM rather than Vite's default IIFE.
+  worker: {
+    format: "es",
+  },
   server: hasLocalLibrary
     ? {
         fs: {
